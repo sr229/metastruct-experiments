@@ -36,13 +36,15 @@ function playMusic(music)
     -- FIXME: This doesn't know how to clean out music
     local audio = pac.CreatePart("mmd_audio_" .. tostring(music))
 
-    audio:SetURL(tostring(music))
-    audio:SetVolume(1)
-    audio:SetPitch(1)
-    audio:SetStopOnHide(true)
-    audio:SetPauseOnHide(true)
+    audio:SetPath(tostring(music))
     audio:SetParent(self)
-end
+
+    for _, part in pairs(pac.GetLocalParts()) do
+        if part.ClassName == "group" then
+            part:SetParent(part)
+            break
+    end
+ end
 
 function cleanupAudio(music)
     local name = "mmd_audio_" .. tostring(music)
@@ -62,6 +64,13 @@ function custom_taunts:OnDanceChanged(sid64, newdata)
 
         --FIXME: find a way to clean this out!
         playMusic(music)
+    end
+
+    if newdata.type == INFO_TYPES.Stop then
+
+        for _, part in pairs(pac.GetLocalParts()) do
+              if string.find(part:Name(), "/mmd_music_([A-zA0-9])+/") == true pac.RemovePart(part) end
+        end
     end
 end
 
