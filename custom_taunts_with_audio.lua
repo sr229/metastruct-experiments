@@ -1,9 +1,9 @@
--- Code by Minori
--- Based on custom_taunt code by Henke
+-- A really hacky way to add sounds on custom_taunts
+-- Because why not, besides PAC3 is being abused everyday anyway
 
 local MATCHING_SOUNDS_MMD = {
     fulldance1 = "",
-    fulldance2 = "",
+    fulldance2 = "https://yuri.might-be-super.fun/5mAY8B3.ogg",
     fulldance3 = "",
     fulldance4 = "",
     fulldance5 = "",
@@ -11,7 +11,7 @@ local MATCHING_SOUNDS_MMD = {
     fulldance7 = "",
     fulldance8 = "",
     fulldance9 = "",
-    fulldance10 = ""
+    fulldance10 = "",
 }
 
 local INFO_TYPES = {
@@ -27,49 +27,50 @@ local INFO_TYPES = {
 }
 
 function PlayMusic(music)
-    print("DEBUG: Playing" .. tostring(music))
+    print("DEBUG: Playing " .. tostring(music))
+
     -- as there is no proper way to do webaudio
     -- we will be abusing pac here and attach
     -- an audio in a outfit
     -- FIXME: This doesn't know how to clean out music
-    local audio = pac.CreatePart("mmd_audio_" .. tostring(music))
+    local group = pac.CreatePart("group")
+    group:SetPlayerOwner(LocalPlayer())
+    group.Name = "mmd_music"
 
-    audio:SetPath(tostring(music))
-    audio:SetParent(self)
+    local event = pac.CreatePart("event")
+    event:SetParent(group)
+    event.Event = "is_on_ground"
 
-    for _, part in pairs(pac.GetLocalParts()) do
-        if part.ClassName == "group" then
-            part:SetParent(part)
-            break
-    end
-  end
+    local musicPart = pac.CreatePart("sound2")
+    musicPart:SetPath(music)
+    musicPart:SetParent(event)
+
+    local transmissionID = math.random(1, 0x7FFFFFFF)
+
+    pace.SendPartToServer(group, {
+        partID = 1,
+        totalParts = 1,
+        transmissionID = transmissionID,
+        temp_wear_filter = nil,
+    })
 end
 
 function custom_taunts:OnDanceChanged(sid64, newdata)
 
-   --  if not sid64 == LocalPlayer():SteamID64 then return nil end
+   if not sid64 == LocalPlayer():SteamID64() then return end
 
     if newdata.type == INFO_TYPES.Dance then
         print("DEBUG: State change to Dance, applying music.")
         local dance = newdata.sequence
-        local music  = MATCHING_SOUNDS_MMD[dance]
+        local music = MATCHING_SOUNDS_MMD[dance]
 
         if not music then print("ERROR: could not find song for dance" .. dance) return end
 
-        --FIXME: find a way to clean this out!
         PlayMusic(music)
-    end
-
-    if newdata.type == INFO_TYPES.Stop then
-        print("DEBUG: State changed to Stopped, throwing away everything.")
-        -- clean up everything
-        for _, part in pairs(pac.GetLocalParts()) do
-              if not string.find(part:Name(), "mmd_music_%w") then
-                  return
-              else
-                 pac.RemovePart(part)
-            end
-        end
     end
 end
 
+function custom_taunts:DestroyPlayerInfo(sid64)
+    self.PlayerList[sid64] = nil
+    print("DEBUG: State changed to Stopped.")
+end
