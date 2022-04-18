@@ -21,7 +21,7 @@ local INFO_TYPES = {
     Traversal = 3,
     Follow = 4,
     SPeed = 5,
-    LoopUpdate =6,
+    LoopUpdate = 6,
     RequestInfo = 7,
     Sterile = 8,
 }
@@ -70,7 +70,8 @@ function custom_taunts:OnDanceChanged(sid64, newdata)
     end
 end
 
-function custom_taunts:DestroyPlayerInfo(sid64)
-    self.PlayerList[sid64] = nil
-    print("DEBUG: State changed to Stopped.")
+custom_taunts.OldDestroyPlayerInfo = custom_taunts.OldDestroyPlayerInfo or custom_taunts.DestroyPlayerInfo
+function custom_taunts:DestroyPlayerInfo(sID64)
+  self:OldDestroyPlayerInfo(sID64)
+  print("State changed to Stopped.")
 end
