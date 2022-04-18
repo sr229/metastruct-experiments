@@ -1,4 +1,3 @@
--- Webaudio based audio implementation override for custom taunts
 -- Code by Minori
 -- Based on custom_taunt code by Henke
 
@@ -27,7 +26,8 @@ local INFO_TYPES = {
     Sterile = 8,
 }
 
-function playMusic(music)
+function PlayMusic(music)
+    print("DEBUG: Playing" .. tostring(music))
     -- as there is no proper way to do webaudio
     -- we will be abusing pac here and attach
     -- an audio in a outfit
@@ -42,31 +42,33 @@ function playMusic(music)
             part:SetParent(part)
             break
     end
- end
-
-function cleanupAudio(music)
-    local name = "mmd_audio_" .. tostring(music)
-    pac.RemovePart(name)
+  end
 end
 
 function custom_taunts:OnDanceChanged(sid64, newdata)
-    -- do not run if it's not us
-    if sid64 == LocalPlayer():SteamID64 then return end
+
+   --  if not sid64 == LocalPlayer():SteamID64 then return nil end
 
     if newdata.type == INFO_TYPES.Dance then
+        print("DEBUG: State change to Dance, applying music.")
         local dance = newdata.sequence
         local music  = MATCHING_SOUNDS_MMD[dance]
 
         if not music then print("ERROR: could not find song for dance" .. dance) return end
 
         --FIXME: find a way to clean this out!
-        playMusic(music)
+        PlayMusic(music)
     end
 
     if newdata.type == INFO_TYPES.Stop then
-
+        print("DEBUG: State changed to Stopped, throwing away everything.")
+        -- clean up everything
         for _, part in pairs(pac.GetLocalParts()) do
-              if string.find(part:Name(), "/mmd_music_([A-zA0-9])+/") == true pac.RemovePart(part) end
+              if not string.find(part:Name(), "mmd_music_%w") then
+                  return
+              else
+                 pac.RemovePart(part)
+            end
         end
     end
 end
