@@ -54,7 +54,6 @@ function custom_taunts:OnDanceChanged(sid64, newdata)
     if sid64 == LocalPlayer():SteamID64 then return end
 
     if newdata.type == INFO_TYPES.Dance then
-        local player = LocalPlayer()
         local dance = newdata.sequence
         local music  = MATCHING_SOUNDS_MMD[dance]
 
