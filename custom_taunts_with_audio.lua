@@ -57,7 +57,7 @@ end
 
 function custom_taunts:OnDanceChanged(sid64, newdata)
 
-   if not sid64 == LocalPlayer():SteamID64() then return end
+   if sid64 ~= LocalPlayer():SteamID64() then return end
 
     if newdata.type == INFO_TYPES.Dance then
         print("DEBUG: State change to Dance, applying music.")
