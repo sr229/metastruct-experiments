@@ -13,17 +13,16 @@ hook.Add("StartCommand", "heatseekingminori", function(ply, cmd)
 	if target:GetPos():Distance(ply:GetPos()) < 128 then
 		return
 	end
-	
-	
-	
+
+
 	-- we wanna run if our target is greater than 512 units
 	-- that way we can still catch up
 	if target:GetPos():Distance(ply:GetPos()) > 512 then
 		cmd:AddKey(IN_SPEED)
 		cmd:SetForwardMove(ply:GetRunSpeed())
-	else 
+	else
 	    cmd:SetForwardMove(ply:GetWalkSpeed())
-	end		
+	end
 
 	local ang = cmd:GetViewAngles()
 	local targetAngle = (target:GetShootPos() - ply:GetShootPos()):GetNormalized():Angle()

@@ -71,7 +71,7 @@ function custom_taunts:OnDanceChanged(sid64, newdata)
 end
 
 custom_taunts.OldDestroyPlayerInfo = custom_taunts.OldDestroyPlayerInfo or custom_taunts.DestroyPlayerInfo
-function custom_taunts:DestroyPlayerInfo(sID64)
-  self:OldDestroyPlayerInfo(sID64)
-  print("State changed to Stopped.")
+function custom_taunts:DestroyPlayerInfo(sid64)
+  self:OldDestroyPlayerInfo(sid64)
+  print("DEBUG: State changed to Stopped.")
 end
