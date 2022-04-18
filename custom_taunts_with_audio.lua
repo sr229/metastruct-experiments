@@ -1,8 +1,6 @@
 -- Webaudio based audio implementation override for custom taunts
 -- Code by Minori
 -- Based on custom_taunt code by Henke
-local webaudio = include("pac3/libraries/webaudio.lua")
-pac.webaudio2 = webaudio
 
 local MATCHING_SOUNDS_MMD = {
     fulldance1 = "",
