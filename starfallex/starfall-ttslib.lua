@@ -1,23 +1,21 @@
 --@name Starfall-TTSLib
 --@author Minori
 --@shared
-
-local remoteList = {
-    "https://tetyys.com/SAPI4/SAPI4?voice%s&pitch=100&speed150&text=",
-    "htts://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=%s&q=%s",
-    "https://tts.cyzon.us/tts?text="
-}
-
-local sapi4Voices = {
-    "Sam",
-    "Mike",
-    "Mary"
-}
-
-local googleVoices = {
-    "en",
-    "fr",
-    "jp"
+local VoiceRemoteList = {
+    {
+        URL = "https://tetyys.com/SAPI4/SAPI4?voice%s&pitch=100&speed150&text=",
+        Name = "sapi4",
+        Voices = {"Sam", "Mike", "Mary"}
+    },
+    {
+        URL = "https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=%s&q=%s",
+        Name = "google",
+        Voices = {"en", "fr", "jp"}
+    },
+    {
+        URL = "https://tts.cyzon.us/tts?text=",
+        Name = "dectalk",
+    }
 }
 
 function itExists(table, val)
@@ -31,47 +29,31 @@ function itExists(table, val)
 end
 
 function TTSLib:speak(ent, txt, remote, variant)
-    if not itExists(remoteList, remote) then
-        print(remote .. " Does not exist in this context")
-    else
-        local url = nil
+    for k,v in ipairs(VoiceRemoteList) do
+        if v.Name == remote then
+            if v.Name == "dectalk" then
+                local url = v.URL .. txt
 
-        if remote == "sapi4" then
-            if not itExists(sapi4Voices, variant) then
-               print("Invalid voice argument, valid voices are: Sam, Mike, Mary")
-            else
-               url = string.format(remoteList[1], variant)
+                http.get(url, function(code, body)
+                    if code == 200 then
+                        file.writeTemp("tts.mp3", body)
+                        ent:EmitSound("tts.mp3")
+                    else
+                        print("Error: HTTP Code" .. code)
+                    end
+                end)
+            elseif itExists(v.Voices, variant) then
+                local url = string.format(v.URL, variant, txt)
+
+                http.get(url, function(code, body)
+                    if code == 200 then
+                        file.writeTemp("tts.mp3", body)
+                        ent:EmitSound("tts.mp3")
+                    else
+                        print("Error: HTTP Code" .. code)
+                    end
+                end)
             end
         end
-
-        if remote == "google" then
-            if not itExists(googleVoices, variant) then
-                print("Invalid voice argument, valid voices are: en, fr, jp")
-            else
-                url = string.format(remoteList[2], variant)
-            end
-        end
-
-        if remote == "dectalk" then
-            -- Ignore arguments here
-            -- DECTalk only has one variant
-            url = remote[3]
-        end
-
-        http.get(url .. http.urlEncode(text), function(code, body)
-            if code == 200 then
-                file.writeTemp("tts.mp3", body)
-
-                if ent ~= nil then
-                    sounds.create(ent, "tts.mp3")
-                else
-                    print("No entity to play sound on")
-                end
-
-                --let's not wait for Starfall to delete this
-                --dispose it immediately
-                file.delete("tts.mp3")
-            end
-        end)
     end
 end
