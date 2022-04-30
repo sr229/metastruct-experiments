@@ -30,7 +30,7 @@ function itExists(table, val)
     end
 end
 
-function speak(ent, txt, remote, variant)
+function TTSLib:speak(ent, txt, remote, variant)
     if not itExists(remoteList, remote) then
         print(remote .. " Does not exist in this context")
     else
@@ -40,7 +40,7 @@ function speak(ent, txt, remote, variant)
             if not itExists(sapi4Voices, variant) then
                print("Invalid voice argument, valid voices are: Sam, Mike, Mary")
             else
-               url = string.format(remoteList[1], voice)
+               url = string.format(remoteList[1], variant)
             end
         end
 
@@ -48,17 +48,14 @@ function speak(ent, txt, remote, variant)
             if not itExists(googleVoices, variant) then
                 print("Invalid voice argument, valid voices are: en, fr, jp")
             else
-                url = string.format(remoteList[2], variant, txt)
+                url = string.format(remoteList[2], variant)
             end
         end
 
         if remote == "dectalk" then
-            if variant ~= nil then
-                print("Warning: DECTalk does not have arguments, ignoring.")
-                url = remote[3]
-            else
-                url = remote[3]
-            end
+            -- Ignore arguments here
+            -- DECTalk only has one variant
+            url = remote[3]
         end
 
         http.get(url .. http.urlEncode(text), function(code, body)
