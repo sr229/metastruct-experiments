@@ -19,13 +19,12 @@ local VoiceRemoteList = {
 }
 
 function itExists(table, val)
-    for i, v in ipairs(table) do
-        if v ~= val then
-            return false
-        else
+    for index, value in pairs(table) do
+        if value == val then
             return true
         end
     end
+    return false
 end
 
 function TTSLib:speak(ent, txt, remote, variant)
