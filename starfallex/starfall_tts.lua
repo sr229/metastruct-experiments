@@ -1,6 +1,5 @@
 --@name Starfall-TTS
 --@author Minori
-local ttsSnd
 
 local VoiceRemoteList = {
     {
@@ -10,7 +9,7 @@ local VoiceRemoteList = {
         DefaultVoice = "Sam"
     },
     {
-        URL = "https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=%s&q=%s",
+        URL = "https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=%s&q=",
         Name = "google",
         Voices = {"en", "fr", "jp"},
         DefaultVoice = "en"
@@ -31,22 +30,9 @@ function itExists(table, val)
 end
 
 local function playSound(url, ent)
-    if ttsSnd then ttsSnd:stop() end
-
-    bass.loadURL(url, "3d noblock",  function(snd, err, errtxt)
-        if snd then
-            ttsSnd = snd
-            snd:SetVolume(1)
-            snd:Play()
-
-            hook.add("think", "snd", function()
-                if isValid(ttsSnd) and isValid(ent) then
-                    ttsSnd:setPos(ent:getPos())
-                end
-            end)
-        else
-            print(errtxt)
-        end
+    bass.loadURL(tostring(url), "3d", function(audio, err, name)
+        hook.add("think", "followSound", function() audio:SetPos(ent:GetPos()) end)
+        audio:play()
     end)
 end
 
@@ -57,15 +43,18 @@ local function playTTS(ent, txt, remote, variant)
                 url = v.URL .. txt
                 playSound(ent, url)
             elseif itExists(v.Voices, variant) then
-                url = string.format(v.URL, variant, txt)
+                url = string.format(v.URL, variant) .. txt
+                print(url .. " Type: " .. type(url))
                 playSound(ent, url)
             elseif variant == nil then
-                url = string.format(v.URL, v.DefaultVoice, txt)
+                url = string.format(v.URL, v.DefaultVoice) .. txt
                 playSound(ent, url)
             end
         end
     end
 end
 
-
-playTTS(chip(), "Hello World", "google", "en")
+hook.add("playerchat", "henkey", function(ply, txt)
+    if ply ~= owner() then return end
+    playTTS(ply, txt, "google", "en")
+end)
