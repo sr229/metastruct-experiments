@@ -61,7 +61,7 @@ function speak(ent, txt, remote, variant)
             end
         end
 
-        http.get(url .. text, function(code, body)
+        http.get(url .. http.urlEncode(text), function(code, body)
             if code == 200 then
                 file.writeTemp("tts.mp3", body)
 
