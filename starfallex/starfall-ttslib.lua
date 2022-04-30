@@ -55,6 +55,7 @@ function speak(ent, txt, remote, variant)
         if remote == "dectalk" then
             if variant ~= nil then
                 print("Warning: DECTalk does not have arguments, ignoring.")
+                url = remote[3]
             else
                 url = remote[3]
             end
