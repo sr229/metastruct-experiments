@@ -69,6 +69,10 @@ function speak(ent, txt, remote, variant)
                 else
                     print("No entity to play sound on")
                 end
+
+                --let's not wait for Starfall to delete this
+                --dispose it immediately
+                file.delete("tts.mp3")
             end
         end)
     end
