@@ -1,6 +1,5 @@
 --@name Starfall-TTS
 --@author Minori
---@shared
 local ttsSnd
 
 local VoiceRemoteList = {
@@ -31,7 +30,7 @@ function itExists(table, val)
     return false
 end
 
-local function playSound(url)
+local function playSound(url, ent)
     if ttsSnd then ttsSnd:stop() end
 
     bass.loadURL(url, "3d noblock",  function(snd, err, errtxt)
@@ -41,8 +40,8 @@ local function playSound(url)
             snd:Play()
 
             hook.add("think", "snd", function()
-                if isValid(ttsSnd) and isValid(chip()) then
-                    ttsSnd:setPos(chip():getPos())
+                if isValid(ttsSnd) and isValid(ent) then
+                    ttsSnd:setPos(ent:getPos())
                 end
             end)
         else
@@ -56,32 +55,17 @@ local function playTTS(ent, txt, remote, variant)
         if v.Name == remote then
             if v.Name == "dectalk" then
                 url = v.URL .. txt
-                playSound(url)
+                playSound(ent, url)
             elseif itExists(v.Voices, variant) then
                 url = string.format(v.URL, variant, txt)
-                playSound(url)
+                playSound(ent, url)
             elseif variant == nil then
                 url = string.format(v.URL, v.DefaultVoice, txt)
-                playSound(url)
+                playSound(ent, url)
             end
         end
     end
 end
 
 
-if SERVER then
-    hook.add("PlayerSay", "Hey", function(ply, txt)
-        if ply == owner() and txt:sub(1, 6) == "!tts2" then
-            net.Start("henke")
-            net.WriteString(txt:sub(7))
-            net.send()
-
-            return ""
-        end
-    end)
-else
-    net.recieve("henke", function(len)
-        body = net.readSring()
-        playTTS(chip(), body, "google", "en")
-    end)
-end
+playTTS(chip(), "Hello World", "google", "en")
