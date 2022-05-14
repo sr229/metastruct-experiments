@@ -8,7 +8,7 @@ local soundref
 hook.add("playerchat", "fucke2", function(ply, txt)
     if ply ~= owner() then return end
 
-    bass.loadURL("https://translate.google.com/translate_tts?ie=UTF-8&q=" .. txt .. "&tl=" .. lang .. "&client=tw-ob", "3d",
+    bass.loadURL("https://translate.google.com/translate_tts?ie=UTF-8&q=" .. http.urlEncode(txt) .. "&tl=" .. lang .. "&client=tw-ob", "3d",
     function(a, err, name)
         -- we dispose the current reference, then we create a new one
         if soundref then soundref:stop() end
