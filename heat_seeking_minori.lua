@@ -2,7 +2,8 @@
 -- to remove the hook please run
 -- hook.Remove("StartCommand", "heatseekingminori")
 
-local target = razz
+local target = empy
+local shouldNoClip = false
 
 print("[luadev/Autopilot] Now following " .. tostring(target))
 
@@ -10,8 +11,16 @@ print("[luadev/Autopilot] Now following " .. tostring(target))
 hook.Add("StartCommand", "heatseekingminori", function(ply, cmd)
 	if ply ~= LocalPlayer() then return end
 	if not target:Alive() then return end
+
 	if target:GetPos():Distance(ply:GetPos()) < 128 then
+		shouldNoClip = false
 		return
+	end
+
+	if not shouldNoClip then
+		if not shouldNoClip then return else RunConsoleCommand("noclip") end
+	else
+		RunConsoleCommand("noclip")
 	end
 
 
@@ -24,18 +33,16 @@ hook.Add("StartCommand", "heatseekingminori", function(ply, cmd)
 	    cmd:SetForwardMove(ply:GetWalkSpeed())
 	end
 
-	-- if father than 512 units away, noclip
+	-- if farther than 512 units away, noclip
 	if target:GetPos():Distance(ply:GetPos()) > 512 then
-		ply:ConCommand("noclip")
+		shouldNoClip = true
 		cmd:AddKey(IN_SPEED)
 		cmd:SetForwardMove(ply:GetRunSpeed())
-	else
-	    cmd:SetForwardMove(ply:GetWalkSpeed())
 	end
 
 	-- This is too far now, we need to TP at this rate.
-	if target:GetPos():Distance(ply:GetPos()) > 2048 then
-		RunConsoleCommand("aowl", "tp ", target:Name())
+	if target:GetPos():Distance(ply:GetPos()) > 4096 then
+		RunConsoleCommand("aowl", "tp", target:Name())
 	end
 
 	local ang = cmd:GetViewAngles()
