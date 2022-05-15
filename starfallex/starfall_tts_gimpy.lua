@@ -12,6 +12,8 @@ hook.add("playerchat", "henkey", function(ply, txt)
     txt = string.sub(txt, 2)
 
 
+    if not txt then return end
+
     bass.loadURL("https://translate.google.com/translate_tts?ie=UTF-8&q=" .. http.urlEncode(txt) .. "&tl=" .. lang .. "&client=tw-ob", "3d",
     function(a, err, name)
         -- we dispose the current reference, then we create a new one
@@ -23,6 +25,7 @@ hook.add("playerchat", "henkey", function(ply, txt)
         hook.add("think", "soundFollow", function() a:setPos(owner():getPos()) end)
         -- do not make it play anything if its nil
         if not soundref then return end
+
         soundref:play()
     end)
 end)
