@@ -2,10 +2,9 @@
 -- to remove the hook please run
 -- hook.Remove("StartCommand", "heatseekingminori")
 
-local target = empy
-local shouldNoClip = false
+local target = nil
 
-print("[luadev/Autopilot] Now following " .. tostring(target))
+say("HEAT SEEKING MINORI ENABLED - NOW SEEKING " .. tostring(target))
 
 
 hook.Add("StartCommand", "heatseekingminori", function(ply, cmd)
@@ -13,16 +12,9 @@ hook.Add("StartCommand", "heatseekingminori", function(ply, cmd)
 	if not target:Alive() then return end
 
 	if target:GetPos():Distance(ply:GetPos()) < 128 then
-		shouldNoClip = false
+		RunConsoleCommand("noclip")
 		return
 	end
-
-	if not shouldNoClip then
-		if not shouldNoClip then return else RunConsoleCommand("noclip") end
-	else
-		RunConsoleCommand("noclip")
-	end
-
 
 	-- we wanna run if our target is greater than 256 units
 	-- that way we can still catch up
@@ -35,7 +27,7 @@ hook.Add("StartCommand", "heatseekingminori", function(ply, cmd)
 
 	-- if farther than 512 units away, noclip
 	if target:GetPos():Distance(ply:GetPos()) > 512 then
-		shouldNoClip = true
+		RunConsoleCommand("noclip")
 		cmd:AddKey(IN_SPEED)
 		cmd:SetForwardMove(ply:GetRunSpeed())
 	end
