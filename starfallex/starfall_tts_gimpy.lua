@@ -24,8 +24,8 @@ hook.add("playerchat", "henkey", function(ply, txt)
 
     if string.sub(txt, 1, 1) ~= ";" then return end
     txt = string.sub(txt, 2)
-    
-    if has_value(VALID_LANGS, txt) then 
+
+    if has_value(VALID_LANGS, txt) then
         lang = txt
     else
       if txt:len() == 0 then return end
@@ -41,7 +41,7 @@ hook.add("playerchat", "henkey", function(ply, txt)
           hook.add("think", "soundFollow", function() a:setPos(owner():getPos()) end)
           -- do not make it play anything if its nil
           if not soundref then return end
-        
+
           soundref:play()
       end)
    end
