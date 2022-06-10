@@ -39,7 +39,11 @@ hook.Add("StartCommand", "autopilot", function(ply, cmd)
 	cmd:SetViewAngles(targetAngle)
 end)
 
-hook.Add("Think", "henkers", function()
+-- This hook makes sure our noclip disengages
+-- Because there's no pretty way than to run this every tick
+-- which is very fucking computationally expensive
+-- But gmod lua is weirdge
+hook.Add("Think", "noclip_think", function()
 	if SHOULD_NOCLIP and target:GetPos():Distance(LocalPlayer():GetPos()) < 512 then
 		SHOULD_NOCLIP = false
 		RunConsoleCommand("noclip")
