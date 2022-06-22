@@ -7,6 +7,9 @@ local VALID_LANGS = {"en-gb", "en-ca", "en-us", "en-au", "ja", "ph", "so"}
 local lang = "en-gb"
 local soundref
 
+-- Check if client has permission
+if not hasPermission("bass.loadURL", "https://translate.google.com/translate_tts") then return end
+
 -- A local function to check if this exists on our valid langs
 -- if it doesn't, we throw error
 local function has_value (tab, val)
@@ -17,6 +20,18 @@ local function has_value (tab, val)
     end
 
     return false
+end
+
+local function DoTTS(txt, lng, callback)
+    bass.loadURL("https://translate.google.com/translate_tts?ie=UTF-8&q=" .. txt .. "&tl=" .. lang .. "&client=tw-ob", "3d",
+    callback)
+end
+
+local function FollowSound(sound, soundLength)
+    if sound:isValid() then sound:setPos(owner():getPos()) else
+        print("the hook died")
+        hook.remove("think", "soundFollow")
+    end
 end
 
 hook.add("playerchat", "fucke2", function(ply, txt)
@@ -36,6 +51,7 @@ hook.add("playerchat", "fucke2", function(ply, txt)
             end
         end
     end
+
     if string.sub(txt, 1, 1) ~= ";" then return end
 
     txt = string.sub(txt,2)
@@ -43,18 +59,21 @@ hook.add("playerchat", "fucke2", function(ply, txt)
 
     txt = http.urlEncode(txt)
 
-    bass.loadURL("https://translate.google.com/translate_tts?ie=UTF-8&q=" .. txt .. "&tl=" .. lang .. "&client=tw-ob", "3d",
-    function(a, err, name)
+    DoTTS(txt, curLang, function(sound, err, name)
 
-        if not a then
+        if not sound then
             print("error: " .. err)
             return
         end
         -- we dispose the current reference, then we create a new one
         if soundref then soundref:stop() end
-        soundref = a
+        soundref = sound
 
-        hook.add("think", "soundFollow", function() a:setPos(owner():getPos()) end)
-        a:play()
+        local soundLength = sound:getLength()
+        hook.add("think", "soundFollow", function()
+            FollowSound(sound, soundLength)
+        end)
+
+        sound:play()
     end)
 end)
