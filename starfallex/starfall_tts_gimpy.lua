@@ -3,8 +3,10 @@
 --@client
 
 local VALID_LANGS = {"en-gb", "en-ca", "en-us", "en-au", "ja", "ph", "so"}
+local errorLookup = {[2] = "Invalid language"}
 
 local lang = "en-gb"
+local curLang = lang
 local soundref
 
 -- Check if client has permission
@@ -22,16 +24,23 @@ local function has_value (tab, val)
     return false
 end
 
-local function DoTTS(txt, lng, callback)
-    bass.loadURL("https://translate.google.com/translate_tts?ie=UTF-8&q=" .. txt .. "&tl=" .. lang .. "&client=tw-ob", "3d",
-    callback)
+local function RequestTTS(txt, l, callback)
+    bass.loadURL("https://translate.google.com/translate_tts?ie=UTF-8&q=" .. txt .. "&tl=" .. curLang .. "&client=tw-ob", "3d", callback)
 end
 
-local function FollowSound(sound, soundLength)
-    if sound:isValid() then sound:setPos(owner():getPos()) else
-        print("the hook died")
-        hook.remove("think", "soundFollow")
-    end
+local function DoTTS(sound)
+    -- we dispose the current reference, then we create a new one
+    if soundref then soundref:stop() end
+    soundref = sound
+
+    --local soundLength = sound:getLength()
+    hook.add("think", "soundFollow", function()
+        if sound:isValid() then sound:setPos(owner():getPos()) else
+           hook.remove("think", "soundFollow")
+        end
+    end)
+
+    sound:play()
 end
 
 hook.add("playerchat", "fucke2", function(ply, txt)
@@ -59,21 +68,24 @@ hook.add("playerchat", "fucke2", function(ply, txt)
 
     txt = http.urlEncode(txt)
 
-    DoTTS(txt, curLang, function(sound, err, name)
+    RequestTTS(txt, curLang, function(sound, err, name)
 
         if not sound then
-            print("error: " .. err)
+            print("error: " .. errorLookup[err])
+
+            if err == 2 then
+               lang = curLang
+
+                RequestTTS(txt, curLang, function(s, e, n)
+                    if not sound then return end
+
+                    DoTTS(sound)
+                end)
+            end
+
             return
         end
-        -- we dispose the current reference, then we create a new one
-        if soundref then soundref:stop() end
-        soundref = sound
 
-        local soundLength = sound:getLength()
-        hook.add("think", "soundFollow", function()
-            FollowSound(sound, soundLength)
-        end)
-
-        sound:play()
+        DoTTS(sound)
     end)
 end)
