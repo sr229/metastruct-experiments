@@ -1,5 +1,5 @@
 --@name GimpyTTS
---@author Mavain and Minori
+--@author Mavain, Minori, Henke, et al.
 --@client
 
 local VALID_LANGS = {"en-gb", "en-ca", "en-us", "en-au", "ja", "ph", "so"}
@@ -19,30 +19,41 @@ local function has_value (tab, val)
     return false
 end
 
-hook.add("playerchat", "henkey", function(ply, txt)
+hook.add("playerchat", "fucke2", function(ply, txt)
     if ply ~= owner() then return end
 
+    if string.sub(txt, 1, 1) == ":" then
+        local l = string.gsub(txt, ":", "")
+        if #l > 1 then
+            local lastLang = l
+
+            if has_value(VALID_LANGS, txt) then
+                lang = l
+            else
+                print("Invalid parameter, check source for valid languages.")
+                lang = lastLang
+            end
+        end
+    end
     if string.sub(txt, 1, 1) ~= ";" then return end
-    txt = string.sub(txt, 2)
 
-    if has_value(VALID_LANGS, txt) then
-        lang = txt
-    else
-      if txt:len() == 0 then return end
+    txt = string.sub(txt,2)
+    if #txt < 1 then return end
 
-      bass.loadURL("https://translate.google.com/translate_tts?ie=UTF-8&q=" .. http.urlEncode(txt) .. "&tl=" .. lang .. "&client=tw-ob", "3d",
+    txt = http.urlEncode(txt)
+
+    bass.loadURL("https://translate.google.com/translate_tts?ie=UTF-8&q=" .. txt .. "&tl=" .. lang .. "&client=tw-ob", "3d",
     function(a, err, name)
-          -- we dispose the current reference, then we create a new one
-          if soundref then soundref:stop() end
-          -- make sure we do not assign nil
-          if not a then return end
-          soundref = a
 
-          hook.add("think", "soundFollow", function() a:setPos(owner():getPos()) end)
-          -- do not make it play anything if its nil
-          if not soundref then return end
+        if not a then
+            print("error: " .. err)
+            return
+        end
+        -- we dispose the current reference, then we create a new one
+        if soundref then soundref:stop() end
+        soundref = a
 
-          soundref:play()
-      end)
-   end
+        hook.add("think", "soundFollow", function() a:setPos(owner():getPos()) end)
+        a:play()
+    end)
 end)

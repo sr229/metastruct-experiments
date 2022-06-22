@@ -2,7 +2,7 @@
 -- to remove the hook please run
 -- hook.Remove("StartCommand", "autopilot")
 
-local target = puh
+local target = phyta
 SHOULD_NOCLIP = false
 
 say("[Luadev/follow] Now following", tostring(target))
