@@ -27,7 +27,7 @@ hook.add("playerchat", "fucke2", function(ply, txt)
         if #l > 1 then
             local lastLang = l
 
-            if has_value(VALID_LANGS, txt) then
+            if has_value(VALID_LANGS, l) then
                 lang = l
             else
                 print("Invalid parameter, check source for valid languages.")
