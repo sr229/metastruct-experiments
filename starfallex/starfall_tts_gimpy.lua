@@ -49,7 +49,7 @@ hook.add("playerchat", "tts", function(ply, txt)
     if string.sub(txt, 1, 1) == ":" then
         local l = string.gsub(txt, ":", "")
         if #l > 1 then
-            local lastLang = l
+            local lastLang = curLang
 
             if has_value(VALID_LANGS, l) then
                 curLang = l
