@@ -5,8 +5,8 @@
 local VALID_LANGS = {"en-gb", "en-ca", "en-us", "en-au", "ja", "ph", "so"}
 local errorLookup = {[2] = "Invalid language"}
 
-local lang = "en-gb"
-local curLang = lang
+local defaultLang = "en-gb"
+local curLang = defaultLang
 local soundref
 
 -- Check if client has permission
@@ -25,7 +25,7 @@ local function has_value (tab, val)
 end
 
 local function RequestTTS(txt, l, callback)
-    bass.loadURL("https://translate.google.com/translate_tts?ie=UTF-8&q=" .. txt .. "&tl=" .. curLang .. "&client=tw-ob", "3d", callback)
+    bass.loadURL("https://translate.google.com/translate_tts?ie=UTF-8&q=" .. txt .. "&tl=" .. l .. "&client=tw-ob", "3d", callback)
 end
 
 local function DoTTS(sound)
@@ -43,7 +43,7 @@ local function DoTTS(sound)
     sound:play()
 end
 
-hook.add("playerchat", "fucke2", function(ply, txt)
+hook.add("playerchat", "tts", function(ply, txt)
     if ply ~= owner() then return end
 
     if string.sub(txt, 1, 1) == ":" then
@@ -52,11 +52,11 @@ hook.add("playerchat", "fucke2", function(ply, txt)
             local lastLang = l
 
             if has_value(VALID_LANGS, l) then
-                lang = l
+                curLang = l
             else
                 print("Invalid parameter, check source for valid languages.")
                 -- Do not error, just reassign back the last language selection
-                lang = lastLang
+                curLang = lastLang
             end
         end
     end
@@ -74,7 +74,7 @@ hook.add("playerchat", "fucke2", function(ply, txt)
             print("error: " .. errorLookup[err])
 
             if err == 2 then
-               lang = curLang
+               curLang = defaultLang
 
                 RequestTTS(txt, curLang, function(s, e, n)
                     if not sound then return end
