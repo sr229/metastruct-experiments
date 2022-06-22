@@ -31,6 +31,7 @@ hook.add("playerchat", "fucke2", function(ply, txt)
                 lang = l
             else
                 print("Invalid parameter, check source for valid languages.")
+                -- Do not error, just reassign back the last language selection
                 lang = lastLang
             end
         end
