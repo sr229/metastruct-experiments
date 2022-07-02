@@ -17,7 +17,7 @@ if not hasPermission("bass.loadURL", "https://translate.google.com/translate_tts
 if not hasPermission("file.read", localLanguageIndex) then return end
 
 local function getRemoteLanguageIndex()
-    print("Building language index. Please be patient.")
+    print("Building language index. Please be patient...")
     http.get(remoteLanguageIndex, function(body, len, hdrs, code)
         if len > 0 then
             local rawData = json.decode(body)
