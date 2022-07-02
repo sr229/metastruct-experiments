@@ -32,8 +32,7 @@ local function getRemoteLanguageIndex()
 
             print("TTS is now ready! Available voices are: ")
             printTable(languageIndex)
-            print("Type ':<lang-id>' to switch to that language")
-            print("Type ';<text>' to use the TTS!")
+            print("Type ':<lang>' to switch to that language.\nType ';<text>' to use the TTS!")
             print("Have fun :)")
         end
     end)
