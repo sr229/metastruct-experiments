@@ -1,4 +1,4 @@
---@name Starfall-TTSv2
+--@name Starfall-TTS
 --@author Minori, Henke, Empy, et al.
 --@client
 
