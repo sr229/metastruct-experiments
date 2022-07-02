@@ -1,27 +1,56 @@
---@name GimpyTTS
---@author Mavain, Minori, Henke, et al.
+--@name Starfall-TTSv2
+--@author Minori
 --@client
 
-local VALID_LANGS = {"en-gb", "en-ca", "en-us", "en-au", "ja", "ph", "so"}
-local errorLookup = {[2] = "Invalid language"}
+local remoteLanguageIndex = "https://raw.githubusercontent.com/sr229/metastruct-experiments/master/starfall_metadata/allowed_google_voices.json"
+local localLanguageIndex = "./tts_index.json"
+local languageIndex
+local errorLookup = { [2] = "Invalid language" }
 
-local defaultLang = "en-gb"
-local curLang = defaultLang
-local soundref
+local DEFAULT_LANGUAGE = "en-gb"
+local currentLang = DEFAULT_LANGUAGE
+
+if not owner() then return end
 
 -- Check if client has permission
 if not hasPermission("bass.loadURL", "https://translate.google.com/translate_tts") then return end
+if not hasPermission("file.read", localLanguageIndedx) then return end
 
--- A local function to check if this exists on our valid langs
--- if it doesn't, we throw error
-local function has_value (tab, val)
-    for index, value in ipairs(tab) do
-        if value == val then
-            return true
+local function getRemoteLanguageIndex()
+    http.get(remoteLanguageIndex, function(body, len, hdrs, code)
+        if len > 0 then
+            file.write(localLanguageIndex, body)
         end
-    end
+    end)
+end
 
-    return false
+
+local function parseLanguageIndex()
+   print("Building language index, please be patient...")
+   getRemoteLanguageIndex()
+   local rawFile = file.read(localLanguageIndex)
+
+   while rawFile == nil do
+     -- do nothing while we wait for data
+     return
+   end
+
+   if not file.exists(localLanguageIndex) then
+     print("Parsing index failed.")
+   end
+
+   local rawTable = json.decode(rawFile)
+   languageIndex = rawTable.voices
+
+   if languageIndex ~= nil then
+      print("Index built successfully. You're now ready to use TTS.")
+      print("Available languages: ")
+      printTable(languageIndex)
+
+      -- Remove the local language index.
+      file.delete(localLanguageIndex)
+      -- print("DEBUG: languageIndex val: " .. tostring(languageIndex))
+   end
 end
 
 local function RequestTTS(txt, l, callback)
@@ -43,49 +72,62 @@ local function DoTTS(sound)
     sound:play()
 end
 
+-- check if the value exists in a table
+local function hasval(table, value)
+    for _, v in pairs(table) do
+        if v == value then
+            return true
+        end
+    end
+    return false
+end
+
+
+parseLanguageIndex()
+
 hook.add("playerchat", "tts", function(ply, txt)
     if ply ~= owner() then return end
 
     if string.sub(txt, 1, 1) == ":" then
         local l = string.gsub(txt, ":", "")
         if #l > 1 then
-            local lastLang = curLang
+            local lastLang = currentLang
 
-            if has_value(VALID_LANGS, l) then
-                curLang = l
+            if hasval(languageIndex, l) then
+                currentLang = l
+                print("Language set to " .. l)
             else
-                print("Invalid parameter, check source for valid languages.")
-                -- Do not error, just reassign back the last language selection
-                curLang = lastLang
+                print("Language " .. l .. " not found. Check available languages for valid ones.")
+                currentLang = lastLang
             end
         end
     end
 
     if string.sub(txt, 1, 1) ~= ";" then return end
 
-    txt = string.sub(txt,2)
+    txt = string.sub(txt, 2)
     if #txt < 1 then return end
 
     txt = http.urlEncode(txt)
 
-    RequestTTS(txt, curLang, function(sound, err, name)
-
-        if not sound then
+    RequestTTS(txt, currentLang, function(snd, err, name)
+        if not snd then
             print("error: " .. errorLookup[err])
 
             if err == 2 then
-               curLang = defaultLang
+                -- reset everything!!
+                currentLang = DEFAULT_LANGUAGE
 
-                RequestTTS(txt, curLang, function(s, e, n)
-                    if not sound then return end
+                RequestTTS(txt, currentLang, function(s, e, n)
+                    if not snd then return end
 
-                    DoTTS(sound)
+                    DoTTS(snd)
                 end)
             end
 
             return
         end
 
-        DoTTS(sound)
+        DoTTS(snd)
     end)
 end)
