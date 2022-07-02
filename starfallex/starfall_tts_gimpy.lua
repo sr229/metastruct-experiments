@@ -3,7 +3,6 @@
 --@client
 
 local remoteLanguageIndex = "https://raw.githubusercontent.com/sr229/metastruct-experiments/master/starfall_metadata/allowed_google_voices.json"
-local localLanguageIndex = "./tts_index.json"
 local languageIndex = {}
 local errorLookup = { [2] = "Invalid language" }
 
@@ -14,7 +13,6 @@ if not owner() then return end
 
 -- Check if client has permission
 if not hasPermission("bass.loadURL", "https://translate.google.com/translate_tts") then return end
-if not hasPermission("file.read", localLanguageIndex) then return end
 
 local function getRemoteLanguageIndex()
     print("Building language index. Please be patient...")
