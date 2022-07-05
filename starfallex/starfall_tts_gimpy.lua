@@ -3,6 +3,7 @@
 --@client
 
 local remoteLanguageIndex = "https://raw.githubusercontent.com/sr229/metastruct-experiments/master/starfall_metadata/allowed_google_voices.json"
+local localLanguageIndex = "./tts_index.json"
 local languageIndex = {}
 local errorLookup = { [2] = "Invalid language" }
 
@@ -76,7 +77,7 @@ hook.add("playerchat", "tts", function(ply, txt)
         if #l > 1 then
             local lastLang = currentLang
 
-            if hasval(languageIndex, l) then
+            if hasval(languageIndex, string.lower(l)) then
                 currentLang = l
                 print("Language set to " .. l)
             else
