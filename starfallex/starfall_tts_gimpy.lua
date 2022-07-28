@@ -1,5 +1,6 @@
 --@name Starfall-TTS
 --@author Minori, Henke, Empy, et al.
+--@include https://gist.githubusercontent.com/sr229/5e6f3a5b03181704a871207c14706499/raw/2ee5b6cfb3a875a5ad2024a38d0131cfb5278785/url-encode.lua as henke.txt
 --@client
 
 local remoteLanguageIndex = "https://raw.githubusercontent.com/sr229/metastruct-experiments/master/starfall_metadata/allowed_google_voices.json"
@@ -8,6 +9,7 @@ local errorLookup = { [2] = "Invalid language" }
 
 local DEFAULT_LANGUAGE = "en-gb"
 local currentLang = DEFAULT_LANGUAGE
+require("henke.txt")
 
 -- Check if client has permission
 if not hasPermission("bass.loadURL", "https://translate.google.com/translate_tts") then return end
@@ -91,7 +93,7 @@ hook.add("playerchat", "tts", function(ply, txt)
     txt = string.sub(txt, 2)
     if #txt < 1 then return end
 
-    txt = http.urlEncode(txt)
+    txt = urlencode(txt)
 
     RequestTTS(txt, currentLang, function(snd, err, name)
         if not snd then
