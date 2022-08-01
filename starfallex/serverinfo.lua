@@ -62,7 +62,7 @@ if SERVER then
             prevSTime = os.date()
             net.start("serverTime")
             net.writeString(os.date())
-            net.send(owner(), false)
+            net.send()
         end
     end)
 
@@ -72,7 +72,7 @@ if SERVER then
             prevName = game.getHostname()
             net.start("serverName")
             net.writeString(game.getHostname())
-            net.send(owner(), false)
+            net.send()
         end
     end)
 end
