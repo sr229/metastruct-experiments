@@ -16,13 +16,27 @@ function getRunningChips()
         --exclude self
         if v == chip() then continue end
 
-        table.insert(serverMetadata.runningChips, {
-            ["this"] = v,
-            ["chip_name"] = #v:getChipName() ~= 0 and v:getChipName() or "<none>",
-            ["chip_owner"] = v:getOwner():getName() or "<none>",
-            ["chip_quota"] = math.floor(v:getQuotaAverage() * 100000)
-        })
+        -- check if entry already exists
+        if itExists(serverMetadata.runningChips, v) then
+            continue
+        else
+            table.insert(serverMetadata.runningChips, {
+                this = v,
+                chip_name = #v:getChipName() ~= 0 and v:getChipName() or "<none>",
+                chip_owner = #v:getOwner():getName() ~= 0 and v:getOwner():getName() or "<none>",
+                chip_quota = math.floor(v:getQuotaAverage() * 100000)
+            })
+        end
     end
+end
+
+function itExists(t, v)
+    for _, sv in ipairs(t) do
+        if sv.this == v then
+            return true
+        end
+    end
+    return false
 end
 
 if SERVER then
@@ -67,7 +81,7 @@ if CLIENT then
     -- update the table
     timer.create("update", 1, 0, function()
         for i, v in ipairs(serverMetadata.runningChips) do
-            local ent = v["this"]
+            local ent = v.this
             v.chip_quota = math.floor(ent:getQuotaAverage() * 100000)
         end
     end)
@@ -92,7 +106,7 @@ if CLIENT then
         end
 
         for i, v in ipairs(serverMetadata.runningChips) do
-            render.drawText(10, 130 + (i * 20), "" .. v["chip_name"] .. " by " .. v["chip_owner"] .. " (" .. v["chip_quota"] .. "us)")
+            render.drawText(10, 130 + (i * 20), "" .. v.chip_name .. " by " .. v.chip_owner .. " (" .. v.chip_quota .. "us)")
         end
     end)
 end
