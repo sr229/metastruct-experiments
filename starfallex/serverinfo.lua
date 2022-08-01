@@ -16,6 +16,9 @@ function getRunningChips()
         --exclude self
         if v == chip() then continue end
 
+        -- do not include empty objects
+        if v == {} then continue end
+
         -- check if entry already exists
         if itExists(serverMetadata.runningChips, v) then
             continue
