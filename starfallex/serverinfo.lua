@@ -11,8 +11,6 @@ local serverMetadata = {
 
 function getRunningChips()
     for _, v in ipairs(find.byClass("starfall_processor")) do
-        if not isValid(v) then continue end
-
         --exclude self
         if v == chip() then continue end
 
@@ -24,6 +22,8 @@ function getRunningChips()
 
         -- check if entry already exists
         if itExists(serverMetadata.runningChips, v) then
+            continue
+        elseif not isValid(v) then
             continue
         else
             table.insert(serverMetadata.runningChips, {
@@ -92,6 +92,7 @@ if CLIENT then
     net.receive("serverName", function()
         serverMetadata.serverName = net.readString()
     end)
+
     -- update the table
     timer.create("update", 1, 0, function()
         for i, v in ipairs(serverMetadata.runningChips) do
@@ -100,8 +101,10 @@ if CLIENT then
         end
     end)
 
-    -- update the running chip entries when necessary
-    timer.create("update_data", 5, 0, function()
+    -- wait why do we ise a timer?
+    -- well it seems OnEntityCreated doesn't have the full info immediately
+    -- so we'll have to wait for 3s then get running chips again
+    timer.create("update_list_scheduled", 3, 0, function()
         getRunningChips()
     end)
 
