@@ -19,6 +19,9 @@ function getRunningChips()
         -- do not include empty objects
         if v == {} then continue end
 
+        -- do not include objects with no owner
+        if not v:getOwner() then continue end
+
         -- check if entry already exists
         if itExists(serverMetadata.runningChips, v) then
             continue
