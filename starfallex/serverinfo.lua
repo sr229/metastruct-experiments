@@ -15,13 +15,24 @@ local serverMetadata = {
 
 if SERVER then
     hook.add("think", "serverTimeTick", function()
-        serverMetadata.sTime = os.date()
+        local prevSTime = ""
+
+        if prevSTime != os.date() then
+            prevSTime = os.date()
+            net.start("serverTime")
+            net.writeString(os.date())
+            net.send(owner(), false)
+        end
     end)
 end
 
 if CLIENT then
     hook.add("think", "clientTimeTick", function()
         serverMetadata.cTime = os.date()
+    end)
+
+    net.receive("serverTime", function()
+        serverMetadata.sTime = net.readString()
     end)
 
     hook.add("render", "metadataRenderMain", function()
