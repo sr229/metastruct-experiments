@@ -57,7 +57,7 @@ if SERVER then
     local prevName = ""
     local prevSTime = ""
 
-    hook.add("tick", "serverTimeTick", function()
+    hook.add("think", "serverTimeTick", function()
         if prevSTime ~= os.date() then
             prevSTime = os.date()
             net.start("serverTime")
@@ -67,7 +67,7 @@ if SERVER then
     end)
 
     -- METASTRUCT SPECIFIC HOOK
-    hook.add("tick", "e621", function()
+    hook.add("think", "e621", function()
         if prevName ~= game.getHostname() then
             prevName = game.getHostname()
             net.start("serverName")
