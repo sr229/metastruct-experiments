@@ -13,19 +13,10 @@ function getRunningChips()
     for _, v in ipairs(find.byClass("starfall_processor")) do
         if not isValid(v) then continue end
 
-        if v:getChipName() == "" and v:getChipAuthor() == "" then
-            table.insert(serverMetadata.runningChips, {
-                ["this"] = v,
-                ["chip_name"] = "Unknown",
-                ["chip_owner"] = "Unknown",
-                ["chip_quota"] = math.floor(v:getQuotaAverage() * 100000)
-            })
-        end
-
         table.insert(serverMetadata.runningChips, {
             ["this"] = v,
-            ["chip_name"] = v:getChipName(),
-            ["chip_owner"] = v:getChipAuthor(),
+            ["chip_name"] = #v:getChipName() ~= 0 and v:getChipName() or "<none>",
+            ["chip_owner"] = v:getOwner():getName(),
             ["chip_quota"] = math.floor(v:getQuotaAverage() * 100000)
         })
     end
@@ -56,6 +47,8 @@ if SERVER then
 end
 
 if CLIENT then
+    getRunningChips()
+
     hook.add("tick", "clientTimeTick", function()
         serverMetadata.cTime = os.date()
     end)
@@ -68,9 +61,6 @@ if CLIENT then
     net.receive("serverName", function()
         serverMetadata.serverName = net.readString()
     end)
-
-    getRunningChips()
-
     -- update the table
     timer.create("update", 1, 0, function()
         if serverMetadata.runningChips == {} then
@@ -90,9 +80,12 @@ if CLIENT then
         render.drawText(10, 30, "Map: " .. serverMetadata.map)
         render.drawText(10, 50, "Client Time: " .. serverMetadata.cTime)
         render.drawText(10, 70, "Server Time: " .. serverMetadata.sTime)
-        render.drawText(10, 110, "Name\t\tOwner\t\tCPU Quota")
+        render.setColor(Color(255, 255, 255 , 255))
+        render.drawText(10, 110, "Running Chips: ")
+
+        render.setColor(Color(82, 113, 250))
         for i, v in ipairs(serverMetadata.runningChips) do
-            render.drawText(10, 130 + (i * 20), "" .. v["chip_name"] .. "\t\t" .. v["chip_owner"] .. "\t\t" .. v["chip_quota"] .. "us")
+            render.drawText(10, 130 + (i * 20), "" .. v["chip_name"] .. " by " .. v["chip_owner"] .. " (" .. v["chip_quota"] .. "us)")
         end
     end)
 end
