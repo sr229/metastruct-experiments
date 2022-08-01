@@ -13,10 +13,13 @@ function getRunningChips()
     for _, v in ipairs(find.byClass("starfall_processor")) do
         if not isValid(v) then continue end
 
+        --exclude self
+        if v == chip() then continue end
+
         table.insert(serverMetadata.runningChips, {
             ["this"] = v,
             ["chip_name"] = #v:getChipName() ~= 0 and v:getChipName() or "<none>",
-            ["chip_owner"] = v:getOwner():getName(),
+            ["chip_owner"] = v:getOwner():getName() or "<none>",
             ["chip_quota"] = math.floor(v:getQuotaAverage() * 100000)
         })
     end
@@ -63,19 +66,19 @@ if CLIENT then
     end)
     -- update the table
     timer.create("update", 1, 0, function()
-        if serverMetadata.runningChips == {} then
-            -- don't forget to populate dr freeman
-            getRunningChips()
-        end
-
         for i, v in ipairs(serverMetadata.runningChips) do
             local ent = v["this"]
             v.chip_quota = math.floor(ent:getQuotaAverage() * 100000)
         end
     end)
 
+    -- update the running chip entries when necessary
+    timer.create("update_data", 30, 0, function()
+        getRunningChips()
+    end)
+
     hook.add("render", "metadataRenderMain", function()
-        render.setColor(Color(255, 0, 0, 255))
+        render.setColor(Color(255, 34, 34))
         render.drawText(10, 10, "Server Name: " .. serverMetadata.serverName)
         render.drawText(10, 30, "Map: " .. serverMetadata.map)
         render.drawText(10, 50, "Client Time: " .. serverMetadata.cTime)
@@ -84,6 +87,10 @@ if CLIENT then
         render.drawText(10, 110, "Running Chips: ")
 
         render.setColor(Color(82, 113, 250))
+        if serverMetadata.runningChips == {} then
+            render.drawText(10, 130, "No Chips Running!")
+        end
+
         for i, v in ipairs(serverMetadata.runningChips) do
             render.drawText(10, 130 + (i * 20), "" .. v["chip_name"] .. " by " .. v["chip_owner"] .. " (" .. v["chip_quota"] .. "us)")
         end
