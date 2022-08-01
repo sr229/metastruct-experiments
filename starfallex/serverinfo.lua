@@ -48,7 +48,6 @@ end
 function cleanupInvalid(t, v)
     for i, sv in ipairs(t) do
         if not isValid(sv.this) then
-            print("WARNING: " .. tostring(sv.this) .. " is no longer valid but exists in table.")
             table.remove(t, i)
         end
     end
@@ -101,13 +100,14 @@ if CLIENT then
         end
     end)
 
-    timer.create("cleanup_invalid", 0.8, 0, function()
-        cleanupInvalid(serverMetadata.runningChips)
-    end)
-
     -- update the running chip entries when necessary
     timer.create("update_data", 5, 0, function()
         getRunningChips()
+    end)
+
+    -- mark and sweep invalid entries
+    hook.add("think", "dispose_object", function()
+        cleanupInvalid(serverMetadata.runningChips)
     end)
 
     hook.add("render", "metadataRenderMain", function()
