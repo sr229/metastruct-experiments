@@ -39,6 +39,15 @@ function itExists(t, v)
     return false
 end
 
+function cleanupInvalid(t, v)
+    for i, sv in ipairs(t) do
+        if not isValid(sv.this) then
+            print("WARNING: " .. tostring(sv.this) .. " is no longer valid but exists in table.")
+            table.remove(t, i)
+        end
+    end
+end
+
 if SERVER then
     local prevName = ""
     local prevSTime = ""
@@ -86,8 +95,12 @@ if CLIENT then
         end
     end)
 
+    timer.create("cleanup_invalid", 0.8, 0, function()
+        cleanupInvalid(serverMetadata.runningChips)
+    end)
+
     -- update the running chip entries when necessary
-    timer.create("update_data", 30, 0, function()
+    timer.create("update_data", 5, 0, function()
         getRunningChips()
     end)
 
