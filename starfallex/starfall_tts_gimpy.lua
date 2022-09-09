@@ -27,7 +27,7 @@ local function getRemoteLanguageIndex()
                     table.insert(languageIndex, i, v)
                 end
             else
-                print("Error: Could not decode JSON")
+                error("Could not decode JSON")
             end
 
             print("TTS is now ready! Available voices are: ")
@@ -97,7 +97,7 @@ hook.add("playerchat", "tts", function(ply, txt)
 
     RequestTTS(txt, currentLang, function(snd, err, name)
         if not snd then
-            print("error: " .. errorLookup[err])
+            error("error: " .. errorLookup[err])
 
             if err == 2 then
                 -- reset everything!!
