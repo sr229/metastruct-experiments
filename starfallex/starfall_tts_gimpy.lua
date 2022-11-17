@@ -14,7 +14,21 @@ local currentLang = DEFAULT_LANGUAGE
 require("henke.txt")
 
 if SERVER then
+    -- this is just to prevent some idiots from making a copy of the thing, but it won't prevent clientside stealing.
     chip():setNoDraw(true)
+
+    -- hide tts chat messages
+    hook.add("PlayerSay", "hide_tts_chat", function(ply, text)
+        -- network the original message
+        net.start("tts_message")
+        net.writeString(text)
+        net.send(ply)
+
+        if ply == owner() and string.sub(text, 1, 1) == ";" or string.sub(text, 1, 1) == ":" then
+            -- then finally return nothing
+            return ""
+        end
+    end)
 end
 
 if CLIENT then
@@ -22,6 +36,7 @@ if CLIENT then
     if not hasPermission("bass.loadURL", "https://translate.google.com/translate_tts") then return end
 
     local function getRemoteLanguageIndex()
+        if not owner() then return end
         if not hasPermission("http.get", remoteLanguageIndex) then return end
         print("Building language index. Please be patient...")
 
@@ -50,9 +65,15 @@ if CLIENT then
     end
 
     local function DoTTS(sound)
+
+        -- check for validity
+        if not sound then
+            error("Sound is invalid or niL!")
+        end
+
         -- we dispose the current reference, then we create a new one
         if soundref then
-            soundref:stop()
+            soundref:destroy()
         end
 
         soundref = sound
@@ -80,48 +101,33 @@ if CLIENT then
 
     getRemoteLanguageIndex()
 
-    hook.add("playerchat", "tts", function(ply, txt)
-        if ply ~= owner() then return end
+    net.receive("tts_message", function()
+        local msg = net.readString()
 
-        if string.sub(txt, 1, 1) == ":" then
-            local l = string.gsub(txt, ":", "")
+        if string.sub(msg, 1, 1) == ";" then
+            local txt = string.sub(msg, 2)
+            local l = currentLang
 
-            if #l > 1 then
-                local lastLang = currentLang
-
-                if hasval(languageIndex, string.lower(l)) then
-                    currentLang = l
-                    print("Language set to " .. l)
+            RequestTTS(urlencode(txt), l, function(s, e, n)
+                if s then
+                    DoTTS(s)
                 else
-                    print("Language " .. l .. " not found. Check available languages for valid ones.")
-                    currentLang = lastLang
+                    error(errorLookup[e] or "Unknown error")
+                end
+            end)
+        elseif string.sub(msg, 1, 1) == ":" then
+            local lang = string.sub(msg, 2)
+
+            if hasval(languageIndex, string.lower(lang)) then
+                currentLang = lang
+                print("Language set to " .. lang)
+            else
+                if e == 2 then
+                    currentLang = DEFAULT_LANGUAGE
+                else
+                    error("error: " .. tostring(errorLookup[e]))
                 end
             end
         end
-
-        if string.sub(txt, 1, 1) ~= ";" then return end
-        txt = string.sub(txt, 2)
-        if #txt < 1 then return end
-        txt = urlencode(txt)
-
-        RequestTTS(txt, currentLang, function(snd, err, name)
-            if not snd then
-                error("error: " .. errorLookup[err])
-
-                if err == 2 then
-                    -- reset everything!!
-                    currentLang = DEFAULT_LANGUAGE
-
-                    RequestTTS(txt, currentLang, function(s, e, n)
-                        if not snd then return end
-                        DoTTS(snd)
-                    end)
-                end
-
-                return
-            end
-
-            DoTTS(snd)
-        end)
     end)
 end
