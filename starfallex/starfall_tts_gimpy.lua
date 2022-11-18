@@ -19,13 +19,18 @@ if SERVER then
 
     -- hide tts chat messages
     hook.add("PlayerSay", "hide_tts_chat", function(ply, text)
-        -- network the original message
-        net.start("tts_message")
-        net.writeString(text)
-        net.send(ply)
 
-        if ply == owner() and string.sub(text, 1, 1) == ";" or string.sub(text, 1, 1) == ":" then
-            -- then finally return nothing
+        if ply == owner() and string.sub(text, 1, 1) == ";" then
+            net.start("tts_message")
+            net.writeString(string.sub(text, 2))
+            net.send()
+            return ""
+        end
+
+        if ply == owner() and string.sub(text, 1, 1) == ":" then
+            net.start("tts_language_switch")
+            net.writeString(string.sub(text, 2))
+            net.send()
             return ""
         end
     end)
@@ -36,7 +41,6 @@ if CLIENT then
     if not hasPermission("bass.loadURL", "https://translate.google.com/translate_tts") then return end
 
     local function getRemoteLanguageIndex()
-        if not owner() then return end
         if not hasPermission("http.get", remoteLanguageIndex) then return end
         print("Building language index. Please be patient...")
 
@@ -60,15 +64,15 @@ if CLIENT then
         end)
     end
 
-    local function RequestTTS(txt, l, callback)
-        bass.loadURL("https://translate.google.com/translate_tts?ie=UTF-8&q=" .. txt .. "&tl=" .. l .. "&client=tw-ob", "3d", callback)
+    local function RequestTTS(txt, lng, callback)
+        bass.loadURL("https://translate.google.com/translate_tts?ie=UTF-8&q=" .. txt .. "&tl=" .. lng .. "&client=tw-ob", "3d", callback)
     end
 
     local function DoTTS(sound)
 
         -- check for validity
         if not sound then
-            error("Sound is invalid or niL!")
+            error("Sound is invalid or nil!")
         end
 
         -- we dispose the current reference, then we create a new one
@@ -102,32 +106,26 @@ if CLIENT then
     getRemoteLanguageIndex()
 
     net.receive("tts_message", function()
-        local msg = net.readString()
+        local text = net.readString()
 
-        if string.sub(msg, 1, 1) == ";" then
-            local txt = string.sub(msg, 2)
-            local l = currentLang
-
-            RequestTTS(urlencode(txt), l, function(s, e, n)
-                if s then
-                    DoTTS(s)
-                else
-                    error(errorLookup[e] or "Unknown error")
-                end
-            end)
-        elseif string.sub(msg, 1, 1) == ":" then
-            local lang = string.sub(msg, 2)
-
-            if hasval(languageIndex, string.lower(lang)) then
-                currentLang = lang
-                print("Language set to " .. lang)
+        RequestTTS(urlencode(text), currentLang, function(s, e)
+            if s then
+                DoTTS(s)
             else
-                if e == 2 then
-                    currentLang = DEFAULT_LANGUAGE
-                else
-                    error("error: " .. tostring(errorLookup[e]))
-                end
+                error("Error: " .. errorLookup[e])
             end
+        end)
+    end)
+
+    net.receive("tts_language_switch", function()
+        local lang = net.readString()
+
+        if hasval(languageIndex, lang) then
+            currentLang = lang
+            print("Switched to language " .. lang)
+        else
+            currentLang = DEFAULT_LANGUAGE
+            print("That language isn't valid!")
         end
     end)
 end
