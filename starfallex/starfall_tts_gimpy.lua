@@ -91,6 +91,7 @@ if CLIENT then
             end
         end)
 
+        sound:setVolume(1.3)
         sound:play()
     end
 
