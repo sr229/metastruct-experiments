@@ -12,9 +12,8 @@ if SERVER then
     hook.add("PlayerSay", "tts_msg", function(ply, txt)
         -- instead of limiting to owner()
         -- we do a little trolling and give it to everyone
-        if ply and string.sub(txt, 1, 1) == ";" then
+        if ply and string.sub(txt, 1, 1) == ":" then
             local content = string.sub(txt, 2)
-            local plyID = ply:getUserID()
             local plySID = ply:getSteamID()
 
             -- Ignore content that has more than 128 characters
@@ -25,11 +24,13 @@ if SERVER then
                 else
                     return
                 end
+            elseif #content == 0 then
+                print(string.format("WARN: ignoring message from %s, empty message.", tostring(plySID)))
             else
                 net.start("aeiou")
-                net.writeInt(plyID, 32)
+                net.writeString(plySID)
                 net.writeString(content)
-                net.send()
+                net.sendPVS(ply:getPos())
             end
             -- do not broadcast original msg to client
             -- BUG: only works for owner()
@@ -43,7 +44,7 @@ if CLIENT then
     print("DECTalk loaded on client. Type ;<text> to use it.")
 
     net.receive("aeiou", function()
-        local plyAuthor = player(net.readInt(32))
+        local plyAuthor = find.playerBySteamID(net.readString())
         local msg = net.readString()
 
         if DEBUG then print(string.format("Playing msg, wordcount: %i", #msg)) end
@@ -68,11 +69,11 @@ if CLIENT then
                 -- sort table by oldest at the top to most recent at the bottom.
                 table.sort(references, function(a, b) return a.timestamp < b.timestamp end)
 
-                if #references ~= 0 or #references > 18 then
-                    -- scan for references that are older than 10 seconds
+                if #references ~= 0 then
+                    -- scan for references that are older than 10 seconds or aren't playing anymore
                     for i, v in ipairs(references) do
-                        if os.time() - v.timestamp > 10 and not v.ref:isPlaying() then
-                            if DEBUG then print(string.format("Destroying reference, ts: %i", v.timestamp)) end
+                        if os.time() - v.timestamp > 10 or not v.ref:isPlaying() then
+                            if DEBUG then print(string.format("Destroying reference, ts: %i sp: %i athr: %s", v.timestamp, i, plyAuthor:getSteamID())) end
                             v.ref:destroy()
                             table.remove(references, i)
                         end
