@@ -47,6 +47,29 @@ if CLIENT then
         local plyAuthor = find.playerBySteamID(net.readString())
         local msg = net.readString()
 
+        local cogc = coroutine.create(function()
+            -- we may have ended up with a unsorted table, let's fix that
+            -- sort table by oldest at the top to most recent at the bottom.
+            table.sort(references, function(a, b) return a.timestamp < b.timestamp end)
+
+            if #references ~= 0 then
+                -- scan for references that are older than 10 seconds or aren't playing anymore
+                for i, v in ipairs(references) do
+                    if not v.ref:isPlaying() then
+                        if DEBUG then
+                            print(string.format("Destroying reference, ts: %i sp: %i athr: %s", v.timestamp, i,
+                                plyAuthor:getSteamID()))
+                        end
+                        v.ref:destroy()
+                        table.remove(references, i)
+                    end
+                end
+                coroutine.yield()
+            end
+        end)
+
+        coroutine.resume(cogc)
+
         if DEBUG then print(string.format("Playing msg, wordcount: %i", #msg)) end
 
         bass.loadURL("https://tts.cyzon.us/tts?text=" .. urlencode(msg), "3d noblock", function(a, e, n)
@@ -63,26 +86,6 @@ if CLIENT then
 
             a:setVolume(1.5)
             a:play()
-
-            local cogc = coroutine.create(function()
-                -- we may have ended up with a unsorted table, let's fix that
-                -- sort table by oldest at the top to most recent at the bottom.
-                table.sort(references, function(a, b) return a.timestamp < b.timestamp end)
-
-                if #references ~= 0 then
-                    -- scan for references that are older than 10 seconds or aren't playing anymore
-                    for i, v in ipairs(references) do
-                        if os.time() - v.timestamp > 10 or not v.ref:isPlaying() then
-                            if DEBUG then print(string.format("Destroying reference, ts: %i sp: %i athr: %s", v.timestamp, i, plyAuthor:getSteamID())) end
-                            v.ref:destroy()
-                            table.remove(references, i)
-                        end
-                    end
-                    coroutine.yield()
-                end
-            end)
-
-            coroutine.resume(cogc)
         end)
     end)
 end
