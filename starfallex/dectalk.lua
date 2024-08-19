@@ -56,10 +56,8 @@ if CLIENT then
                 -- scan for references that are older than 10 seconds or aren't playing anymore
                 for i, v in ipairs(references) do
                     if not v.ref:isPlaying() then
-                        if DEBUG then
-                            print(string.format("Destroying reference, ts: %i sp: %i athr: %s", v.timestamp, i,
-                                plyAuthor:getSteamID()))
-                        end
+                        if DEBUG then print(string.format("Destroying reference, ts: %i sp: %i athr: %s", v.timestamp, i,
+                                plyAuthor:getSteamID())) end
                         v.ref:destroy()
                         table.remove(references, i)
                     end
