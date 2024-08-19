@@ -56,10 +56,6 @@ if CLIENT then
                 timestamp = os.time()
             })
 
-            -- we may have ended up with a unsorted table, let's fix that
-            -- sort table by oldest at the top to most recent at the bottom.
-            table.sort(references, function(a, b) return a.timestamp < b.timestamp end)
-
             hook.add("Think", "followSound", function()
                 a:setPos(plyAuthor:getPos())
             end)
@@ -68,6 +64,10 @@ if CLIENT then
             a:play()
 
             local cogc = coroutine.create(function()
+                -- we may have ended up with a unsorted table, let's fix that
+                -- sort table by oldest at the top to most recent at the bottom.
+                table.sort(references, function(a, b) return a.timestamp < b.timestamp end)
+
                 if #references ~= 0 or #references > 18 then
                     -- scan for references that are older than 10 seconds
                     for i, v in ipairs(references) do
@@ -80,6 +80,7 @@ if CLIENT then
                     coroutine.yield()
                 end
             end)
+
             coroutine.resume(cogc)
         end)
     end)
