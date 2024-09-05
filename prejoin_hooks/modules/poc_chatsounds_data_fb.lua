@@ -9,7 +9,7 @@ data.Lookup = data.Lookup or {
 	Dynamic = {},
 }
 
-local CDN_USE_FALLBACK = CreateConVar("chatsounds_cdn_use_fallback", "0", FCVAR_ARCHIVE, "Use fallback CDN for chatsounds, this is useful if raw.githubusercontent.com is blocked in your country")
+local CDN_USE_FALLBACK = CreateConVar("chatsounds_cdn_use_fallback", "0", FCVAR_ARCHIVE, "Use fallback CDN for chatsounds, this is useful if raw.githubusercontent.com is not working (requires a recompile!)")
 
 local function BUILD_CONTENT_URL(repo, branch, path)
 	if CDN_USE_FALLBACK:GetBool() then
