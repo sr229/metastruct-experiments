@@ -2,12 +2,12 @@
 --@author Minori
 --@include https://gist.githubusercontent.com/sr229/5e6f3a5b03181704a871207c14706499/raw/2ee5b6cfb3a875a5ad2024a38d0131cfb5278785/url-encode.lua as henke.txt
 --@shared
-local DEBUG = true
+local DEBUG = false
 local references = {}
 require("henke.txt")
 
 if SERVER then
-    print("sv: DECTalk server hook loaded, ready to listen to other players.")
+    if DEBUG then print("sv: DECTalk server hook loaded, ready to listen to other players.") end
     
     hook.add("PlayerSay", "tts_msg", function(ply, txt)
         if ply and string.sub(txt, 1, 1) == ":" then
@@ -38,7 +38,9 @@ end
 
 if CLIENT then
     if not hasPermission("bass.loadURL", "https://tts.cyzon.us/tts") then return end
-    print("DECTalk loaded on client. Type :<text> to use it.")
+    if DEBUG then print("cl: DECTalk loaded on client.") end
+    
+    print("DECTalk initialised! Type :<text> to use it. Remember you have a 128-char limit and everyone can use it!")
 
     net.receive("aeiou", function()
         local ply = net.readString()
