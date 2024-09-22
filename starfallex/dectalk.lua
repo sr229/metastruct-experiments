@@ -57,8 +57,13 @@ if CLIENT then
                 })
             end)()
 
-            hook.add("Think", "followSound", function()
+            hook.add("Tick", "followSound", function()
                 a:setPos(plyAuthor:getPos())
+                
+                if a:isStopped() then
+                    if DEBUG then print("cl: sound finished, removing tick hook") end
+                    hook.remove("Tick", "followSound")
+                end
             end)
 
             a:setVolume(1.5)
@@ -77,7 +82,7 @@ if CLIENT then
                 if #references ~= 0 then
                     -- scan for references that are older than 10 seconds or aren't playing anymore
                     for i, v in ipairs(references) do
-                        if os.time() - v.timestamp > 5 or v.ref:isStopped() then
+                        if v.ref:isStopped() then
                             if DEBUG then print(string.format("cl: Destroying reference, ts: %i sp: %i athr: %s", v.timestamp, i, plyAuthor:getSteamID())) end
                             v.ref:destroy()
                             table.remove(references, i)
