@@ -7,11 +7,9 @@ local references = {}
 require("henke.txt")
 
 if SERVER then
-    -- haaugh
-    --chip():setNoDraw(true)
+    print("sv: DECTalk server hook loaded, ready to listen to other players.")
+    
     hook.add("PlayerSay", "tts_msg", function(ply, txt)
-        -- instead of limiting to owner()
-        -- we do a little trolling and give it to everyone
         if ply and string.sub(txt, 1, 1) == ":" then
             local content = string.sub(txt, 2)
             local plySID = ply:getSteamID()
@@ -25,16 +23,15 @@ if SERVER then
                     return
                 end
             elseif #content == 0 then
-                print(string.format("WARN: ignoring message from %s, empty message.", tostring(plySID)))
+                if DEBUG then print(string.format("WARN: ignoring message from %s, empty message.", tostring(plySID))) end
+                return
             else
+                if DEBUG then print(string.format("sv: transmitting message from %s, msg: %s", plySID, content)) end
                 net.start("aeiou")
                 net.writeString(plySID)
                 net.writeString(content)
                 net.sendPVS(ply:getPos())
             end
-            -- do not broadcast original msg to client
-            -- BUG: only works for owner()
-            --return ""
         end
     end)
 end
@@ -44,51 +41,53 @@ if CLIENT then
     print("DECTalk loaded on client. Type :<text> to use it.")
 
     net.receive("aeiou", function()
-        local plyAuthor = find.playerBySteamID(net.readString())
+        local ply = net.readString()
         local msg = net.readString()
+        local plyAuthor = find.playerBySteamID(ply)
 
-        if DEBUG then print(string.format("Playing msg, wordcount: %i", #msg)) end
+        if DEBUG then print(string.format("cl: recieved msg from %s wordcount: %i", ply, #msg)) end
 
         bass.loadURL("https://tts.cyzon.us/tts?text=" .. urlencode(msg), "3d noblock", function(a, e, n)
             -- since Starfall has no way to keep track of audio objects
             -- we will have to manage the lifecycle oureselves via a local table
-            table.insert(references, {
-                ref = a,
-                timestamp = os.time()
-            })
+            coroutine.wrap(function() 
+                table.insert(references, {
+                    ref = a,
+                    timestamp = os.time()
+                })
+            end)()
 
             hook.add("Think", "followSound", function()
                 a:setPos(plyAuthor:getPos())
             end)
 
             a:setVolume(1.5)
-            a:play()
-        end)
+            
+            if a:isValid() then
+                a:play()
+            else
+                if DEBUG then print("cl: WARN: attempted to play invalid object (did it disappear!?)") end
+            end
 
-        local cogc = coroutine.create(function()
-            -- we may have ended up with a unsorted table, let's fix that
-            -- sort table by oldest at the top to most recent at the bottom.
-            table.sort(references, function(a, b) return a.timestamp < b.timestamp end)
+            local cogc = coroutine.create(function()
+                -- we may have ended up with a unsorted table, let's fix that
+                -- sort table by oldest at the top to most recent at the bottom.
+                table.sort(references, function(a, b) return a.timestamp < b.timestamp end)
 
-            if #references ~= 0 and #references > 10 then
-                -- scan for references that are older than 5 seconds or aren't playing anymore
-                for i, v in ipairs(references) do
-                    if os.difftime(os.time(), v.timestamp) >= 5 then
-                        -- pyramid looking ass
-                        if not v.ref:isPlaying() then
-                            if DEBUG then print(string.format("Destroying reference, ts: %i sp: %i athr: %s", v.timestamp, i,
-                                    plyAuthor:getSteamID())) end
+                if #references ~= 0 then
+                    -- scan for references that are older than 10 seconds or aren't playing anymore
+                    for i, v in ipairs(references) do
+                        if os.time() - v.timestamp > 5 or v.ref:isStopped() then
+                            if DEBUG then print(string.format("cl: Destroying reference, ts: %i sp: %i athr: %s", v.timestamp, i, plyAuthor:getSteamID())) end
                             v.ref:destroy()
                             table.remove(references, i)
                         end
-                    else
-                        coroutine.yield()
                     end
+                    coroutine.yield()
                 end
-                coroutine.yield()
-            end
-        end)
+            end)
 
-        coroutine.resume(cogc)
+            coroutine.resume(cogc)
+        end)
     end)
 end
