@@ -54,14 +54,14 @@ if SERVER then
     -- chip():setOwner(true)
 
     hook.add("PlayerSay", "msgHandler", function(ply, msg)
-        if ply and string.sub(msg, 1, 1) == ":" and userdata[ply:getUserID()] then
+        if ply and string.sub(msg, 1, 1) == ";" and userdata[ply:getUserID()] then
 
             net.start("broadcast_tts")
             net.writeInt(ply:getUserID(), 32)
             net.writeString(userdata[ply:getUserID()])
             net.writeString(tostring(string.sub(msg, 2)))
             net.send()
-        elseif ply and string.sub(msg, 1, 1) == ":" then
+        elseif ply and string.sub(msg, 1, 1) == ";" then
             -- initialize the user
            table.insert(userdata, ply:getUserID(), DEFAULT_LANGUAGE)
 
