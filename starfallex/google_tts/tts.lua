@@ -5,14 +5,42 @@
 --@shared
 
 -- constants
-local DEFAULT_LANGUAGE = "en-gb"
-local DEBUG = true
-local REMOTE_INDEX = "https://raw.githubusercontent.com/sr229/metastruct-experiments/master/starfall_metadata/allowed_google_voices.json"
-local BASS_REFERENCES = {}
+DEFAULT_LANGUAGE = "en-gb"
+DEBUG = false
+REMOTE_INDEX = "https://raw.githubusercontent.com/sr229/metastruct-experiments/master/starfall_metadata/allowed_google_voices.json"
+
+-- mutables
+BASS_REFERENCES = {}
 
 -- top level requires
 require("urlencode.txt")
 require("hasvalue.txt")
+
+local function getRemoteLanguageIndex(idx)
+    if not hasPermission("http.get", "https://translate.google.com/translate_tts") then
+        error("Cannot fetch remote index, context has no perms!")
+    end
+
+    http.get(REMOTE_INDEX, function(body, len)
+        if len > 0 then
+            local rawData = json.decode(body)
+
+            if rawData then
+                for i, v in pairs(rawData.voices) do
+                    table.insert(idx, i, v)
+                end
+            else
+                error("Could not decode JSON")
+            end
+        end
+
+        if #idx > 0 then
+            print("FUNC: Finished fetching index.")
+            print(string.format("Available Languages: %s", table.concat(idx, ", ")))
+        end
+    end)
+end
+
 
 
 if SERVER then
@@ -22,44 +50,18 @@ if SERVER then
     --     [1] = "en-gb"
     -- }
     local userdata = {}
-    -- This is the server's copy of the remote index.
-    local srvidx = {}
     -- if you just want to hide it from the idiots around you
     -- chip():setOwner(true)
-    local function getRemoteLanguageIndex()
-        print("SERVER: Building language index. Please be patient...")
-
-        http.get(REMOTE_INDEX, function(body, len)
-            if len > 0 then
-                local rawData = json.decode(body)
-
-                if rawData then
-                    for i, v in pairs(rawData.voices) do
-                        table.insert(srvidx, i, v)
-                    end
-                else
-                    error("Could not decode JSON")
-                end
-            end
-
-            if #srvidx > 0 then
-                print("SERVER: Serverside hook initialized.")
-                print(string.format("Available Languages: %s", table.concat(srvidx, ", ")))
-            end
-        end)
-    end
-
-    getRemoteLanguageIndex()
 
     hook.add("PlayerSay", "msgHandler", function(ply, msg)
-        if ply and string.sub(msg, 1, 1) == ";" and userdata[ply:getUserID()] then
+        if ply and string.sub(msg, 1, 1) == ":" and userdata[ply:getUserID()] then
 
             net.start("broadcast_tts")
             net.writeInt(ply:getUserID(), 32)
             net.writeString(userdata[ply:getUserID()])
             net.writeString(tostring(string.sub(msg, 2)))
             net.send()
-        elseif ply and string.sub(msg, 1, 1) == ";" then
+        elseif ply and string.sub(msg, 1, 1) == ":" then
             -- initialize the user
            table.insert(userdata, ply:getUserID(), DEFAULT_LANGUAGE)
 
@@ -70,29 +72,27 @@ if SERVER then
            net.send()
         end
 
-        if ply and string.sub(msg, 1, 1) == ":" and userdata[ply:getUserID()] then
+        if ply and string.sub(msg, 1, 1) == "+" and userdata[ply:getUserID()] then
             local preferredLang = tostring(string.sub(msg, 2))
 
-            if HasValue(srvidx, preferredLang) then
-                print(string.format("Swtiched to %s", preferredLang))
-                userdata[ply:getUserID()] = preferredLang
-            else
-                print("WARN: Invalid Language! No changes were made.")
-            end
-        elseif ply and string.sub(msg, 1, 1) == ":" then
+            print(string.format("Switched to %s", preferredLang))
+            print("WARN: server has no knowledge of valid languages! Make sure what you entered is correct!")
+            userdata[ply:getUserID()] = preferredLang
+        elseif ply and string.sub(msg, 1, 1) == "+" then
             local preferredLang = tostring(string.sub(msg, 2))
-            print("No preferences found for you. Initializing you with your preferred language.")
-            if HasValue(srvidx, preferredLang) then
-                table.insert(userdata, ply:getUserID(), preferredLang)
-            else
-                print("WARN: Your preferred language is not valid! Initializing you with the default one instead.")
-                table.insert(userdata, ply:getUserID(), DEFAULT_LANGUAGE)
-            end
+            
+            print(string.format("No preferences found for %s (%s). Initializing with a default language.", ply:getName(), ply:getUserID()))
+            table.insert(userdata, ply:getUserID(), preferredLang or DEFAULT_LANGUAGE)
         end
     end)
 end
 
 if CLIENT then
+    -- keep client cache of index
+    -- TODO: make clientside verification for language switching
+    local clIdx = {}
+    getRemoteLanguageIndex(clIdx)
+    
     -- Check if client has permission
     if not hasPermission("bass.loadURL", "https://translate.google.com/translate_tts") then
         print("WARNING: Your starfall settings prevents this chip from working, please redo your settings.")
