@@ -16,7 +16,7 @@ interactions = {
     end,
 
     [2] = function()
-        RunConsoleCommand("saysound", "i love you#5") 
+        RunConsoleCommand("saysound", "i love you#2") 
         RunConsoleCommand("taunt", "IHeartYou")
     end,
 
@@ -32,6 +32,11 @@ interactions = {
     end,
 
     [5] = function()
+        RunConsoleCommand("actx", "disagree")
+        RunConsoleCommand("saysound", "nono")
+    end,
+
+    [6] = function()
         RunConsoleCommand("aowl", "killx", "1")
         RunConsoleCommand("saysound", "kani:echo()^500")
         
@@ -41,7 +46,7 @@ interactions = {
         end)
     end,
 
-    [6] = function(tp)
+    [7] = function(tp)
         hook.Add("StartCommand", "impending_doom", function(ply, cmd)
             local tgtAng = (tp:GetShootPos() - ply:GetShootPos()):GetNormalized():Angle()
 
@@ -54,6 +59,11 @@ interactions = {
         timer.Simple(3, function() 
             hook.Remove("StartCommand", "impending_doom")
         end)
+    end,
+    [7] = function(tp)
+        local amt = math.random(1, 100000)
+        SayLocal(":heart:")
+        SayLocal(string.format("!givecoins %s, %s", tp:GetName(), amt))
     end
 }
 
